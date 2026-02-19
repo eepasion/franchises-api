@@ -1,0 +1,74 @@
+package co.com.bancolombia.api.helper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebExceptionHandler;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@Component
+@Order(-2)
+@RequiredArgsConstructor
+@Slf4j
+public class GlobalErrorHandler implements WebExceptionHandler {
+
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public @NotNull Mono<Void> handle(@NotNull ServerWebExchange exchange, @NotNull Throwable ex) {
+
+        var response = exchange.getResponse();
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        if (ex instanceof ConstraintViolationException validationEx) {
+            log.warn("Validation error: {}", ex.getMessage());
+            return toListErrors(validationEx.getConstraintViolations())
+                    .flatMap(errors -> writeResponse(response, HttpStatus.BAD_REQUEST,
+                            "Validation Error", errors));
+        }
+
+        log.error("An error has occurred: {}", ex.getMessage(), ex);
+        return writeResponse(response, HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal Server Error", List.of(ex.getMessage()));
+    }
+
+    private Mono<Void> writeResponse(org.springframework.http.server.reactive.ServerHttpResponse response,
+                                     HttpStatus status, String error, List<String> details) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", status.value());
+        errorResponse.put("error", error);
+        errorResponse.put("details", details);
+
+        return Mono.fromCallable(() -> objectMapper.writeValueAsBytes(errorResponse))
+                .map(response.bufferFactory()::wrap)
+                .flatMap(buffer -> {
+                    response.setStatusCode(status);
+                    return response.writeWith(Mono.just(buffer));
+                })
+                .onErrorResume(e -> {
+                    log.error("Error writing response", e);
+                    response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+                    return response.setComplete();
+                });
+    }
+
+    private Mono<List<String>> toListErrors(Set<ConstraintViolation<?>> violations) {
+        return Flux.fromIterable(violations)
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collectList();
+    }
+}
