@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -29,7 +28,6 @@ public class Handler {
     private final CreateFranchiseUseCase createFranchiseUseCase;
 
 
-    @Bean
     @RouterOperations({
             @RouterOperation(
                     path = "/api/franchises",

@@ -7,9 +7,10 @@ import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 public class CreateFranchiseUseCase {
-    private FranchiseRepository gateway;
+    private final FranchiseRepository gateway;
 
     public Mono<Franchise> save(Franchise franchise){
+        franchise.setId(java.util.UUID.randomUUID().toString());
         return gateway.save(franchise);
     }
 }
