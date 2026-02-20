@@ -7,6 +7,7 @@ import co.com.bancolombia.r2dbc.helper.ReactiveAdapterOperations;
 import co.com.bancolombia.r2dbc.repository.ProductReactiveRepository;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
@@ -23,5 +24,11 @@ public class ProductRepositoryAdapter extends ReactiveAdapterOperations<
     @Override
     public Mono<Void> deleteById(Long id) {
         return repository.deleteById(id);
+    }
+
+    @Override
+    public Flux<Product> findTopStockByBranchesInFranchise(Long franchiseId) {
+        return repository.findTopStockProductsByFranchise(franchiseId)
+                .map(this::toEntity);
     }
 }

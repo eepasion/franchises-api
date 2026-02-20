@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivecommons.utils.ObjectMapper;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -186,6 +187,79 @@ class ProductRepositoryAdapterTest {
                 .verify();
 
         verify(repository).deleteById(1L);
+    }
+
+    @Test
+    void findTopStockByBranchesInFranchise_ShouldMapAndReturnProducts() {
+        Long franchiseId = 1L;
+        ProductEntity product2Entity = ProductEntity.builder()
+                .id(2L)
+                .name("Product 2")
+                .stock(20)
+                .branchId(2L)
+                .build();
+
+        when(repository.findTopStockProductsByFranchise(franchiseId))
+                .thenReturn(Flux.just(productEntity, product2Entity));
+        when(mapper.mapBuilder(productEntity, Product.ProductBuilder.class))
+                .thenReturn(Product.builder()
+                        .id(1L)
+                        .name("Test Product")
+                        .stock(10)
+                        .branchId(1L));
+        when(mapper.mapBuilder(product2Entity, Product.ProductBuilder.class))
+                .thenReturn(Product.builder()
+                        .id(2L)
+                        .name("Product 2")
+                        .stock(20)
+                        .branchId(2L));
+
+        StepVerifier.create(adapter.findTopStockByBranchesInFranchise(franchiseId))
+                .expectNextMatches(result ->
+                        result.getId().equals(1L) &&
+                                result.getName().equals("Test Product") &&
+                                result.getStock().equals(10)
+                )
+                .expectNextMatches(result ->
+                        result.getId().equals(2L) &&
+                                result.getName().equals("Product 2") &&
+                                result.getStock().equals(20)
+                )
+                .verifyComplete();
+
+        verify(repository).findTopStockProductsByFranchise(franchiseId);
+        verify(mapper, times(2)).mapBuilder(any(ProductEntity.class), eq(Product.ProductBuilder.class));
+    }
+
+    @Test
+    void findTopStockByBranchesInFranchise_WhenNoProducts_ShouldReturnEmpty() {
+        Long franchiseId = 999L;
+        when(repository.findTopStockProductsByFranchise(franchiseId))
+                .thenReturn(Flux.empty());
+
+        StepVerifier.create(adapter.findTopStockByBranchesInFranchise(franchiseId))
+                .verifyComplete();
+
+        verify(repository).findTopStockProductsByFranchise(franchiseId);
+        verify(mapper, never()).mapBuilder(any(), any());
+    }
+
+    @Test
+    void findTopStockByBranchesInFranchise_WhenRepositoryFails_ShouldPropagateError() {
+        Long franchiseId = 1L;
+        RuntimeException exception = new RuntimeException("Database error");
+
+        when(repository.findTopStockProductsByFranchise(franchiseId))
+                .thenReturn(Flux.error(exception));
+
+        StepVerifier.create(adapter.findTopStockByBranchesInFranchise(franchiseId))
+                .expectErrorMatches(error ->
+                        error instanceof RuntimeException &&
+                                error.getMessage().equals("Database error")
+                )
+                .verify();
+
+        verify(repository).findTopStockProductsByFranchise(franchiseId);
     }
 
 }
