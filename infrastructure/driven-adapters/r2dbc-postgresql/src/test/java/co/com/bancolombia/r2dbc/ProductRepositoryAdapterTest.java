@@ -162,4 +162,30 @@ class ProductRepositoryAdapterTest {
                 )
                 .verifyComplete();
     }
+
+    @Test
+    void deleteById_ShouldDeleteProduct() {
+        when(repository.deleteById(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(adapter.deleteById(1L))
+                .verifyComplete();
+
+        verify(repository).deleteById(1L);
+    }
+
+    @Test
+    void deleteById_WhenRepositoryFails_ShouldPropagateError() {
+        RuntimeException exception = new RuntimeException("Database error");
+        when(repository.deleteById(1L)).thenReturn(Mono.error(exception));
+
+        StepVerifier.create(adapter.deleteById(1L))
+                .expectErrorMatches(error ->
+                        error instanceof RuntimeException &&
+                                error.getMessage().equals("Database error")
+                )
+                .verify();
+
+        verify(repository).deleteById(1L);
+    }
+
 }

@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -95,11 +96,32 @@ public class RouterRest {
                                     @ApiResponse(responseCode = "404", description = "Branch not found")
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/products/{productId}",
+                    method = RequestMethod.DELETE,
+                    beanClass = Handler.class,
+                    beanMethod = "deleteProduct",
+                    operation = @Operation(
+                            operationId = "deleteProduct",
+                            summary = "Delete a product",
+                            tags = {"Products"},
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "204",
+                                            description = "Product deleted successfully"
+                                    ),
+                                    @ApiResponse(responseCode = "400", description = "Invalid product ID"),
+                                    @ApiResponse(responseCode = "404", description = "Product not found")
+                            }
+                    )
             )
+
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/franchises"), handler::createFranchise)
                 .andRoute(POST("/api/franchises/{franchiseId}/branches"), handler::addBranchToFranchise)
-                .andRoute(POST("/api/branches/{branchId}/products"), handler::addProductToBranch);
+                .andRoute(POST("/api/branches/{branchId}/products"), handler::addProductToBranch)
+                .andRoute(DELETE("/api/products/{productId}"), handler::deleteProduct);
     }
 }
