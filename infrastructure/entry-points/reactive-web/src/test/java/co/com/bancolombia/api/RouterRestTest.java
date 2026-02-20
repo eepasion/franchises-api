@@ -3,6 +3,7 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.dto.request.AddBranchRequest;
 import co.com.bancolombia.api.dto.request.AddProductRequest;
 import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
+import co.com.bancolombia.api.dto.request.UpdateProductStockRequest;
 import co.com.bancolombia.api.dto.response.BranchResponse;
 import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
 import co.com.bancolombia.api.dto.response.ProductResponse;
@@ -17,6 +18,7 @@ import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCa
 import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
+import co.com.bancolombia.usecase.updateproductstock.UpdateProductStockUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,9 @@ class RouterRestTest {
 
     @MockitoBean
     private DeleteProductUseCase deleteProductUseCase;
+
+    @MockitoBean
+    private UpdateProductStockUseCase updateProductStockUseCase;
 
     @TestConfiguration
     static class Config {
@@ -258,6 +263,85 @@ class RouterRestTest {
 
         webTestClient.delete()
                 .uri("/api/products/999")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void testUpdateProductStock() {
+        Product updatedProduct = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .stock(25)
+                .branchId(1L)
+                .build();
+
+        when(updateProductStockUseCase.updateStock(1L, 25))
+                .thenReturn(Mono.just(updatedProduct));
+
+        UpdateProductStockRequest request = UpdateProductStockRequest.builder()
+                .stock(25)
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/products/1/stock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProductResponse.class)
+                .value(response -> {
+                    assertThat(response).isNotNull()
+                            .extracting(
+                                    ProductResponse::getId,
+                                    ProductResponse::getName,
+                                    ProductResponse::getStock,
+                                    ProductResponse::getBranchId
+                            ).containsExactly(1L, "Test Product", 25, 1L);
+                });
+    }
+
+    @Test
+    void testUpdateProductStockWithInvalidId() {
+        UpdateProductStockRequest request = UpdateProductStockRequest.builder()
+                .stock(25)
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/products/invalid/stock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testUpdateProductStockWithInvalidStock() {
+        UpdateProductStockRequest request = UpdateProductStockRequest.builder()
+                .stock(-5)
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/products/1/stock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testUpdateProductStockNotFound() {
+        when(updateProductStockUseCase.updateStock(999L, 25))
+                .thenReturn(Mono.error(new BusinessException(ErrorCode.B404003)));
+
+        UpdateProductStockRequest request = UpdateProductStockRequest.builder()
+                .stock(25)
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/products/999/stock")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
                 .exchange()
                 .expectStatus().isNotFound();
     }
