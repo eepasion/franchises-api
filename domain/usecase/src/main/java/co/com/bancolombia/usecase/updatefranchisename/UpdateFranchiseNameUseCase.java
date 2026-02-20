@@ -13,7 +13,7 @@ public class UpdateFranchiseNameUseCase {
 
     public Mono<Franchise> updateName(Long productId, String newName) {
         return franchiseRepository.findById(productId)
-                .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.B404003)))
+                .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.B404001)))
                 .map(franchise -> franchise.toBuilder().name(newName).build())
                 .flatMap(franchiseRepository::save);
     }

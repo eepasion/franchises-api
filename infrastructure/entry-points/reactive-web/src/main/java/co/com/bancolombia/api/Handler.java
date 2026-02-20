@@ -3,6 +3,7 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.dto.request.AddBranchRequest;
 import co.com.bancolombia.api.dto.request.AddProductRequest;
 import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
+import co.com.bancolombia.api.dto.request.UpdateBranchNameRequest;
 import co.com.bancolombia.api.dto.request.UpdateFranchiseNameRequest;
 import co.com.bancolombia.api.dto.request.UpdateProductStockRequest;
 import co.com.bancolombia.api.helper.ValidationUtil;
@@ -16,6 +17,7 @@ import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
 import co.com.bancolombia.usecase.gettopstockproductsbyfranchise.GetTopStockProductsByFranchiseUseCase;
+import co.com.bancolombia.usecase.updatebranchname.UpdateBranchNameUseCase;
 import co.com.bancolombia.usecase.updatefranchisename.UpdateFranchiseNameUseCase;
 import co.com.bancolombia.usecase.updateproductstock.UpdateProductStockUseCase;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class Handler {
     private final UpdateProductStockUseCase updateProductStockUseCase;
     private final GetTopStockProductsByFranchiseUseCase topStockProductsByFranchiseUseCase;
     private final UpdateFranchiseNameUseCase updateFranchiseNameUseCase;
+    private final UpdateBranchNameUseCase updateBranchNameUseCase;
     private static final String FRANCHISE_PATH_VARIABLE = "franchiseId";
     private static final String BRANCH_PATH_VARIABLE = "branchId";
     private static final String PRODUCT_PATH_VARIABLE = "productId";
@@ -127,13 +130,28 @@ public class Handler {
         return Mono.fromCallable(() -> Long.parseLong(franchiseIdStr))
                 .onErrorMap(NumberFormatException.class,
                         e -> new BusinessException(ErrorCode.B400001, INVALID_PRODUCT_ID))
-                .flatMap(productId ->
+                .flatMap(franchiseId ->
                         serverRequest.bodyToMono(UpdateFranchiseNameRequest.class)
                                 .flatMap(validationUtil::validate)
-                                .flatMap(request -> updateFranchiseNameUseCase.updateName(productId, request.getName()))
+                                .flatMap(request -> updateFranchiseNameUseCase.updateName(franchiseId, request.getName()))
                                 .map(FranchiseMapper::toDto)
-                                .flatMap(product ->
-                                        ServerResponse.ok().bodyValue(product))
+                                .flatMap(franchise ->
+                                        ServerResponse.ok().bodyValue(franchise))
+                );
+    }
+
+    public Mono<ServerResponse> updateBranchName(ServerRequest serverRequest) {
+        String branchIdStr = serverRequest.pathVariable(BRANCH_PATH_VARIABLE);
+        return Mono.fromCallable(() -> Long.parseLong(branchIdStr))
+                .onErrorMap(NumberFormatException.class,
+                        e -> new BusinessException(ErrorCode.B400001, INVALID_PRODUCT_ID))
+                .flatMap(branchId ->
+                        serverRequest.bodyToMono(UpdateBranchNameRequest.class)
+                                .flatMap(validationUtil::validate)
+                                .flatMap(request -> updateBranchNameUseCase.updateName(branchId, request.getName()))
+                                .map(BranchMapper::toDto)
+                                .flatMap(branch ->
+                                        ServerResponse.ok().bodyValue(branch))
                 );
     }
 }
