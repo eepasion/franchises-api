@@ -1,60 +1,86 @@
 package co.com.bancolombia.api;
 
-import org.assertj.core.api.Assertions;
+import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
+import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
+import co.com.bancolombia.api.helper.GlobalErrorHandler;
+import co.com.bancolombia.api.helper.ValidationUtil;
+import co.com.bancolombia.model.franchise.Franchise;
+import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
-@ContextConfiguration(classes = {RouterRest.class, Handler.class})
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@ContextConfiguration(classes = {RouterRest.class, Handler.class, ValidationUtil.class, GlobalErrorHandler.class, RouterRestTest.Config.class})
 @WebFluxTest
 class RouterRestTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
-    @Test
-    void testListenGETUseCase() {
-        webTestClient.get()
-                .uri("/api/usecase/path")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+    @MockitoBean
+    private CreateFranchiseUseCase createFranchiseUseCase;
+
+    @TestConfiguration
+    static class Config {
+        @Bean
+        public ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
     }
 
     @Test
-    void testListenGETOtherUseCase() {
-        webTestClient.get()
-                .uri("/api/otherusercase/path")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
-    }
+    void testCreateFranchise() {
+        Franchise savedFranchise = Franchise.builder()
+                .id("123")
+                .name("Test Franchise")
+                .build();
 
-    @Test
-    void testListenPOSTUseCase() {
+        when(createFranchiseUseCase.save(any(Franchise.class)))
+                .thenReturn(Mono.just(savedFranchise));
+
+        CreateFranchiseRequest request = CreateFranchiseRequest.builder()
+                .name("Test Franchise")
+                .build();
+
         webTestClient.post()
-                .uri("/api/usecase/otherpath")
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue("")
+                .uri("/api/franchises")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> {
-                            Assertions.assertThat(userResponse).isEmpty();
-                        }
-                );
+                .expectStatus().isCreated()
+                .expectBody(CreateFranchiseResponse.class)
+                .value(response -> {
+                    assertThat(response).isNotNull()
+                            .extracting(
+                                    CreateFranchiseResponse::getId,
+                                    CreateFranchiseResponse::getName
+                            ).containsExactly("123", "Test Franchise");
+                });
+    }
+
+    @Test
+    void testCreateFranchiseWithInvalidName() {
+        CreateFranchiseRequest request = CreateFranchiseRequest.builder()
+                .name("")
+                .build();
+
+        webTestClient.post()
+                .uri("/api/franchises")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
     }
 }

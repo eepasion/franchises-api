@@ -1,10 +1,14 @@
 package co.com.bancolombia.config;
 
+import co.com.bancolombia.model.franchise.Franchise;
+import co.com.bancolombia.model.franchise.gateways.FranchiseRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import reactor.core.publisher.Mono;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UseCasesConfigTest {
@@ -29,16 +33,15 @@ class UseCasesConfigTest {
     @Configuration
     @Import(UseCasesConfig.class)
     static class TestConfig {
-
         @Bean
-        public MyUseCase myUseCase() {
-            return new MyUseCase();
+        public FranchiseRepository franchiseRepository() {
+            return new FranchiseRepository() {
+                @Override
+                public Mono<Franchise> save(Franchise franchise) {
+                    return Mono.empty();
+                }
+            };
         }
     }
 
-    static class MyUseCase {
-        public String execute() {
-            return "MyUseCase Test";
-        }
-    }
 }
