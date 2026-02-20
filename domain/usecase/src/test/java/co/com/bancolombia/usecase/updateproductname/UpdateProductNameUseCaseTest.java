@@ -1,4 +1,4 @@
-package co.com.bancolombia.usecase.updateproductstock;
+package co.com.bancolombia.usecase.updateproductname;
 
 import co.com.bancolombia.model.exception.BusinessException;
 import co.com.bancolombia.model.exception.ErrorCode;
@@ -20,13 +20,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UpdateProductStockUseCaseTest {
+class UpdateProductNameUseCaseTest {
 
     @Mock
     private ProductRepository productRepository;
 
     @InjectMocks
-    private UpdateProductStockUseCase useCase;
+    private UpdateProductNameUseCase useCase;
 
     private Product product;
 
@@ -34,26 +34,26 @@ class UpdateProductStockUseCaseTest {
     void setUp() {
         product = Product.builder()
                 .id(1L)
-                .name("Test Product")
+                .name("Old Product Name")
                 .stock(10)
                 .branchId(1L)
                 .build();
     }
 
     @Test
-    void updateStock_WhenProductExists_ShouldUpdateStock() {
+    void updateName_WhenProductExists_ShouldUpdateName() {
         Long productId = 1L;
-        Integer newStock = 20;
-        Product updatedProduct = product.toBuilder().stock(newStock).build();
+        String newName = "New Product Name";
+        Product updatedProduct = product.toBuilder().name(newName).build();
 
         when(productRepository.findById(productId)).thenReturn(Mono.just(product));
         when(productRepository.save(any(Product.class))).thenReturn(Mono.just(updatedProduct));
 
-        StepVerifier.create(useCase.updateStock(productId, newStock))
+        StepVerifier.create(useCase.updateName(productId, newName))
                 .expectNextMatches(result ->
                         result.getId().equals(1L) &&
-                                result.getName().equals("Test Product") &&
-                                result.getStock().equals(20) &&
+                                result.getName().equals("New Product Name") &&
+                                result.getStock().equals(10) &&
                                 result.getBranchId().equals(1L)
                 )
                 .verifyComplete();
@@ -63,12 +63,12 @@ class UpdateProductStockUseCaseTest {
     }
 
     @Test
-    void updateStock_WhenProductNotFound_ShouldThrowBusinessException() {
+    void updateName_WhenProductNotFound_ShouldThrowBusinessException() {
         Long productId = 999L;
-        Integer newStock = 20;
+        String newName = "New Product Name";
         when(productRepository.findById(productId)).thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.updateStock(productId, newStock))
+        StepVerifier.create(useCase.updateName(productId, newName))
                 .expectErrorMatches(error ->
                         error instanceof BusinessException &&
                                 ((BusinessException) error).getErrorCode() == ErrorCode.B404003
@@ -80,15 +80,15 @@ class UpdateProductStockUseCaseTest {
     }
 
     @Test
-    void updateStock_WhenRepositoryFails_ShouldPropagateError() {
+    void updateName_WhenRepositoryFails_ShouldPropagateError() {
         Long productId = 1L;
-        Integer newStock = 20;
+        String newName = "New Product Name";
         RuntimeException exception = new RuntimeException("Database error");
 
         when(productRepository.findById(productId)).thenReturn(Mono.just(product));
         when(productRepository.save(any(Product.class))).thenReturn(Mono.error(exception));
 
-        StepVerifier.create(useCase.updateStock(productId, newStock))
+        StepVerifier.create(useCase.updateName(productId, newName))
                 .expectErrorMatches(error ->
                         error instanceof RuntimeException &&
                                 error.getMessage().equals("Database error")
@@ -100,28 +100,28 @@ class UpdateProductStockUseCaseTest {
     }
 
     @Test
-    void updateStock_ShouldPreserveOtherProductFields() {
+    void updateName_ShouldPreserveOtherProductFields() {
         Long productId = 1L;
-        Integer newStock = 5;
-        Product updatedProduct = product.toBuilder().stock(newStock).build();
+        String newName = "Updated Name";
+        Product updatedProduct = product.toBuilder().name(newName).build();
 
         when(productRepository.findById(productId)).thenReturn(Mono.just(product));
         when(productRepository.save(any(Product.class))).thenReturn(Mono.just(updatedProduct));
 
-        StepVerifier.create(useCase.updateStock(productId, newStock))
+        StepVerifier.create(useCase.updateName(productId, newName))
                 .expectNextMatches(result ->
                         result.getId().equals(product.getId()) &&
-                                result.getName().equals(product.getName()) &&
+                                result.getStock().equals(product.getStock()) &&
                                 result.getBranchId().equals(product.getBranchId()) &&
-                                result.getStock().equals(newStock)
+                                result.getName().equals(newName)
                 )
                 .verifyComplete();
 
         verify(productRepository).save(argThat(p ->
                 p.getId().equals(product.getId()) &&
-                        p.getName().equals(product.getName()) &&
+                        p.getStock().equals(product.getStock()) &&
                         p.getBranchId().equals(product.getBranchId()) &&
-                        p.getStock().equals(newStock)
+                        p.getName().equals(newName)
         ));
     }
 }

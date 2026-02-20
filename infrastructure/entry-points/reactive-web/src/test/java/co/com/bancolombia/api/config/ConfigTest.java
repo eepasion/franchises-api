@@ -8,6 +8,9 @@ import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
 import co.com.bancolombia.usecase.gettopstockproductsbyfranchise.GetTopStockProductsByFranchiseUseCase;
+import co.com.bancolombia.usecase.updatebranchname.UpdateBranchNameUseCase;
+import co.com.bancolombia.usecase.updatefranchisename.UpdateFranchiseNameUseCase;
+import co.com.bancolombia.usecase.updateproductname.UpdateProductNameUseCase;
 import co.com.bancolombia.usecase.updateproductstock.UpdateProductStockUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +51,15 @@ class ConfigTest {
 
     @MockitoBean
     private GetTopStockProductsByFranchiseUseCase getTopStockProductsByFranchiseUseCase;
+
+    @MockitoBean
+    private UpdateFranchiseNameUseCase updateFranchiseNameUseCase;
+
+    @MockitoBean
+    private UpdateProductNameUseCase updateProductNameUseCase;
+
+    @MockitoBean
+    private UpdateBranchNameUseCase updateBranchNameUseCase;
 
     @Test
     void corsConfigurationShouldAllowOrigins() {
