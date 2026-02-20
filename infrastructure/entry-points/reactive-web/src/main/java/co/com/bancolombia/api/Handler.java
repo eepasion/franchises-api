@@ -12,6 +12,7 @@ import co.com.bancolombia.model.exception.ErrorCode;
 import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCase;
 import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
+import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,7 @@ public class Handler {
     private final CreateFranchiseUseCase createFranchiseUseCase;
     private final AddBranchToFranchiseUseCase addBranchToFranchiseUseCase;
     private final AddProductToBranchUseCase addProductToBranchUseCase;
+    private final DeleteProductUseCase deleteProductUseCase;
 
 
     public Mono<ServerResponse> createFranchise(ServerRequest serverRequest) {
@@ -69,5 +71,14 @@ public class Handler {
                                 .flatMap(product ->
                                         ServerResponse.status(HttpStatus.CREATED).bodyValue(product))
                 );
+    }
+
+    public Mono<ServerResponse> deleteProduct(ServerRequest serverRequest) {
+        String productIdStr = serverRequest.pathVariable("productId");
+        return Mono.fromCallable(() -> Long.parseLong(productIdStr))
+                .onErrorMap(NumberFormatException.class,
+                        e -> new BusinessException(ErrorCode.B400001, "Invalid product ID"))
+                .flatMap(deleteProductUseCase::deleteProduct)
+                .then(ServerResponse.noContent().build());
     }
 }

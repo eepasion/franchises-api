@@ -75,6 +75,14 @@ class UseCasesConfigTest {
                 public Mono<Product> save(Product products) {
                     return Mono.empty();
                 }
+                @Override
+                public Mono<Product> findById(Long id){
+                    return Mono.empty();
+                }
+                @Override
+                public Mono<Void> deleteById(Long id){
+                    return Mono.empty();
+                }
 
             };
         }
