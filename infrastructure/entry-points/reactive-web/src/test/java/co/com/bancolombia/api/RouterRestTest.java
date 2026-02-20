@@ -43,7 +43,7 @@ class RouterRestTest {
     @Test
     void testCreateFranchise() {
         Franchise savedFranchise = Franchise.builder()
-                .id("123")
+                .id(1L)
                 .name("Test Franchise")
                 .build();
 

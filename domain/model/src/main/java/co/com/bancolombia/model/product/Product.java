@@ -9,8 +9,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Product {
-    private String id;
+    private Long id;
     private String name;
     private Integer stock;
-    private String branchId;
+    private Long branchId;
 }
