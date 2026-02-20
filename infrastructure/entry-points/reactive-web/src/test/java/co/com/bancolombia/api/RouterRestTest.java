@@ -5,7 +5,8 @@ import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
 import co.com.bancolombia.api.helper.GlobalErrorHandler;
 import co.com.bancolombia.api.helper.ValidationUtil;
 import co.com.bancolombia.model.franchise.Franchise;
-import co.com.bancolombia.usecase.createfranchise.AddBranchToFranchiseUseCase;
+import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCase;
+import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class RouterRestTest {
 
     @MockitoBean
     private AddBranchToFranchiseUseCase addBranchToFranchiseUseCase;
+
+    @MockitoBean
+    private AddProductToBranchUseCase addProductToBranchUseCase;
 
     @TestConfiguration
     static class Config {

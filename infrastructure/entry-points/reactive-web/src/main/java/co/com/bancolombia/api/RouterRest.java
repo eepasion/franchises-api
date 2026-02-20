@@ -1,9 +1,11 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.request.AddBranchRequest;
+import co.com.bancolombia.api.dto.request.AddProductRequest;
 import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
 import co.com.bancolombia.api.dto.response.BranchResponse;
 import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
+import co.com.bancolombia.api.dto.response.ProductResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -69,10 +71,35 @@ public class RouterRest {
                                     @ApiResponse(responseCode = "404", description = "Franchise not found")
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/branches/{branchId}/products",
+                    method = RequestMethod.POST,
+                    beanClass = Handler.class,
+                    beanMethod = "addProductToBranch",
+                    operation = @Operation(
+                            operationId = "addProductToBranch",
+                            summary = "Add a new product to a specific branch",
+                            tags = {"Products"},
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    content = @Content(schema = @Schema(implementation = AddProductRequest.class))
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "201",
+                                            description = "Product added successfully",
+                                            content = @Content(schema = @Schema(implementation = ProductResponse.class))
+                                    ),
+                                    @ApiResponse(responseCode = "400", description = "Invalid request"),
+                                    @ApiResponse(responseCode = "404", description = "Branch not found")
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/franchises"), handler::createFranchise)
-                .andRoute(POST("/api/franchises/{franchiseId}/branches"), handler::addBranchToFranchise);
+                .andRoute(POST("/api/franchises/{franchiseId}/branches"), handler::addBranchToFranchise)
+                .andRoute(POST("/api/branches/{branchId}/products"), handler::addProductToBranch);
     }
 }

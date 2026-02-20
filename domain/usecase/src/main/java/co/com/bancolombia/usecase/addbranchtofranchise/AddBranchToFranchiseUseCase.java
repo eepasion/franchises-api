@@ -1,4 +1,4 @@
-package co.com.bancolombia.usecase.createfranchise;
+package co.com.bancolombia.usecase.addbranchtofranchise;
 
 import co.com.bancolombia.model.branch.Branch;
 import co.com.bancolombia.model.branch.gateways.BranchRepository;

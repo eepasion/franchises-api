@@ -1,13 +1,16 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.api.dto.request.AddBranchRequest;
+import co.com.bancolombia.api.dto.request.AddProductRequest;
 import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
 import co.com.bancolombia.api.helper.ValidationUtil;
 import co.com.bancolombia.api.mapper.BranchMapper;
 import co.com.bancolombia.api.mapper.FranchiseMapper;
+import co.com.bancolombia.api.mapper.ProductMapper;
 import co.com.bancolombia.model.exception.BusinessException;
 import co.com.bancolombia.model.exception.ErrorCode;
-import co.com.bancolombia.usecase.createfranchise.AddBranchToFranchiseUseCase;
+import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCase;
+import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +26,7 @@ public class Handler {
     private final ValidationUtil validationUtil;
     private final CreateFranchiseUseCase createFranchiseUseCase;
     private final AddBranchToFranchiseUseCase addBranchToFranchiseUseCase;
+    private final AddProductToBranchUseCase addProductToBranchUseCase;
 
 
     public Mono<ServerResponse> createFranchise(ServerRequest serverRequest) {
@@ -48,6 +52,22 @@ public class Handler {
                                 .map(BranchMapper::toDto)
                                 .flatMap(branch ->
                                         ServerResponse.status(HttpStatus.CREATED).bodyValue(branch))
+                );
+    }
+
+    public Mono<ServerResponse> addProductToBranch(ServerRequest serverRequest) {
+        String branchIdStr = serverRequest.pathVariable("branchId");
+        return Mono.fromCallable(() -> Long.parseLong(branchIdStr))
+                .onErrorMap(NumberFormatException.class,
+                        e -> new BusinessException(ErrorCode.B400001, "Invalid branch ID"))
+                .flatMap(branchId ->
+                        serverRequest.bodyToMono(AddProductRequest.class)
+                                .flatMap(validationUtil::validate)
+                                .map(ProductMapper::toDomain)
+                                .flatMap(product -> addProductToBranchUseCase.addProduct(branchId, product))
+                                .map(ProductMapper::toDto)
+                                .flatMap(product ->
+                                        ServerResponse.status(HttpStatus.CREATED).bodyValue(product))
                 );
     }
 }

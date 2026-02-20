@@ -4,6 +4,8 @@ import co.com.bancolombia.model.branch.Branch;
 import co.com.bancolombia.model.branch.gateways.BranchRepository;
 import co.com.bancolombia.model.franchise.Franchise;
 import co.com.bancolombia.model.franchise.gateways.FranchiseRepository;
+import co.com.bancolombia.model.product.Product;
+import co.com.bancolombia.model.product.gateways.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -55,6 +57,22 @@ class UseCasesConfigTest {
             return new BranchRepository() {
                 @Override
                 public Mono<Branch> save(Branch branch) {
+                    return Mono.empty();
+                }
+
+                @Override
+                public Mono<Branch> findById(Long id) {
+                    return Mono.empty();
+                }
+
+            };
+        }
+
+        @Bean
+        public ProductRepository productsRepository() {
+            return new ProductRepository() {
+                @Override
+                public Mono<Product> save(Product products) {
                     return Mono.empty();
                 }
 
