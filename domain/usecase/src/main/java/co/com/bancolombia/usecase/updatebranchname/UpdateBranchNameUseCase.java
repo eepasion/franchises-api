@@ -11,10 +11,10 @@ import reactor.core.publisher.Mono;
 public class UpdateBranchNameUseCase {
     private final BranchRepository branchRepository;
 
-    public Mono<Branch> updateName(Long productId, String newName) {
-        return branchRepository.findById(productId)
+    public Mono<Branch> updateName(Long branchId, String newName) {
+        return branchRepository.findById(branchId)
                 .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.B404002)))
-                .map(franchise -> franchise.toBuilder().name(newName).build())
+                .map(branch -> branch.toBuilder().name(newName).build())
                 .flatMap(branchRepository::save);
     }
 }

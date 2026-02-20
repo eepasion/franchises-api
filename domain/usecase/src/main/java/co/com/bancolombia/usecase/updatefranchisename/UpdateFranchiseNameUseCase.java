@@ -11,8 +11,8 @@ import reactor.core.publisher.Mono;
 public class UpdateFranchiseNameUseCase {
     private final FranchiseRepository franchiseRepository;
 
-    public Mono<Franchise> updateName(Long productId, String newName) {
-        return franchiseRepository.findById(productId)
+    public Mono<Franchise> updateName(Long franchiseId, String newName) {
+        return franchiseRepository.findById(franchiseId)
                 .switchIfEmpty(Mono.error(new BusinessException(ErrorCode.B404001)))
                 .map(franchise -> franchise.toBuilder().name(newName).build())
                 .flatMap(franchiseRepository::save);
