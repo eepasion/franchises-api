@@ -3,6 +3,7 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.dto.request.AddBranchRequest;
 import co.com.bancolombia.api.dto.request.AddProductRequest;
 import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
+import co.com.bancolombia.api.dto.request.UpdateProductStockRequest;
 import co.com.bancolombia.api.helper.ValidationUtil;
 import co.com.bancolombia.api.mapper.BranchMapper;
 import co.com.bancolombia.api.mapper.FranchiseMapper;
@@ -13,6 +14,7 @@ import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCa
 import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
+import co.com.bancolombia.usecase.updateproductstock.UpdateProductStockUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,7 @@ public class Handler {
     private final AddBranchToFranchiseUseCase addBranchToFranchiseUseCase;
     private final AddProductToBranchUseCase addProductToBranchUseCase;
     private final DeleteProductUseCase deleteProductUseCase;
+    private final UpdateProductStockUseCase updateProductStockUseCase;
 
 
     public Mono<ServerResponse> createFranchise(ServerRequest serverRequest) {
@@ -80,5 +83,20 @@ public class Handler {
                         e -> new BusinessException(ErrorCode.B400001, "Invalid product ID"))
                 .flatMap(deleteProductUseCase::deleteProduct)
                 .then(ServerResponse.noContent().build());
+    }
+
+    public Mono<ServerResponse> updateProductStock(ServerRequest serverRequest) {
+        String productIdStr = serverRequest.pathVariable("productId");
+        return Mono.fromCallable(() -> Long.parseLong(productIdStr))
+                .onErrorMap(NumberFormatException.class,
+                        e -> new BusinessException(ErrorCode.B400001, "Invalid product ID"))
+                .flatMap(productId ->
+                        serverRequest.bodyToMono(UpdateProductStockRequest.class)
+                                .flatMap(validationUtil::validate)
+                                .flatMap(request -> updateProductStockUseCase.updateStock(productId, request.getStock()))
+                                .map(ProductMapper::toDto)
+                                .flatMap(product ->
+                                        ServerResponse.ok().bodyValue(product))
+                );
     }
 }

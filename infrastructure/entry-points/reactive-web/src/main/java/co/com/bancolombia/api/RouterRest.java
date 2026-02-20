@@ -3,6 +3,7 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.dto.request.AddBranchRequest;
 import co.com.bancolombia.api.dto.request.AddProductRequest;
 import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
+import co.com.bancolombia.api.dto.request.UpdateProductStockRequest;
 import co.com.bancolombia.api.dto.response.BranchResponse;
 import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
 import co.com.bancolombia.api.dto.response.ProductResponse;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
+import static org.springframework.web.reactive.function.server.RequestPredicates.PATCH;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -115,6 +117,30 @@ public class RouterRest {
                                     @ApiResponse(responseCode = "404", description = "Product not found")
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/products/{productId}/stock",
+                    method = RequestMethod.PATCH,
+                    beanClass = Handler.class,
+                    beanMethod = "updateProductStock",
+                    operation = @Operation(
+                            operationId = "updateProductStock",
+                            summary = "Update product stock",
+                            tags = {"Products"},
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    content = @Content(schema = @Schema(implementation = UpdateProductStockRequest.class))
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Product stock updated successfully",
+                                            content = @Content(schema = @Schema(implementation = ProductResponse.class))
+                                    ),
+                                    @ApiResponse(responseCode = "400", description = "Invalid request"),
+                                    @ApiResponse(responseCode = "404", description = "Product not found")
+                            }
+                    )
             )
 
     })
@@ -122,6 +148,7 @@ public class RouterRest {
         return route(POST("/api/franchises"), handler::createFranchise)
                 .andRoute(POST("/api/franchises/{franchiseId}/branches"), handler::addBranchToFranchise)
                 .andRoute(POST("/api/branches/{branchId}/products"), handler::addProductToBranch)
-                .andRoute(DELETE("/api/products/{productId}"), handler::deleteProduct);
+                .andRoute(DELETE("/api/products/{productId}"), handler::deleteProduct)
+                .andRoute(PATCH("/api/products/{productId}/stock"), handler::updateProductStock);
     }
 }
