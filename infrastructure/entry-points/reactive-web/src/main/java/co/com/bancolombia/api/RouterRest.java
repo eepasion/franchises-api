@@ -151,6 +151,7 @@ public class RouterRest {
                 .andRoute(GET("/api/franchises/{franchiseId}/top-products"), handler::getTopStockProductsByFranchise)
                 .andRoute(POST("/api/branches/{branchId}/products"), handler::addProductToBranch)
                 .andRoute(DELETE("/api/products/{productId}"), handler::deleteProduct)
-                .andRoute(PATCH("/api/products/{productId}/stock"), handler::updateProductStock);
+                .andRoute(PATCH("/api/products/{productId}/stock"), handler::updateProductStock)
+                .andRoute(PATCH("/api/franchises/{franchiseId}/name"), handler::updateFranchiseName);
     }
 }
