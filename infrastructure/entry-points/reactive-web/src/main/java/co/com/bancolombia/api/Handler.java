@@ -7,7 +7,7 @@ import co.com.bancolombia.api.mapper.BranchMapper;
 import co.com.bancolombia.api.mapper.FranchiseMapper;
 import co.com.bancolombia.model.exception.BusinessException;
 import co.com.bancolombia.model.exception.ErrorCode;
-import co.com.bancolombia.usecase.createfranchise.AddBranchToFranchiseUseCase;
+import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -5,7 +5,9 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     B400001("B400-001", "Invalid format: %s", 400),
-    B404001("B404-001", "Franchise not found", 404);
+    B404001("B404-001", "Franchise not found", 404),
+    B404002("B404-002", "Branch not found", 404);
+
 
     private final String code;
     private final String messageTemplate;
