@@ -1,5 +1,6 @@
 package co.com.bancolombia.api.helper;
 
+import co.com.bancolombia.model.exception.BusinessException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -34,24 +35,36 @@ public class GlobalErrorHandler implements WebExceptionHandler {
         var response = exchange.getResponse();
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
+        if (ex instanceof BusinessException businessEx) {
+            log.warn("Business error [{}]: {}", businessEx.getCode(), ex.getMessage());
+            return writeResponse(response,
+                    HttpStatus.valueOf(businessEx.getHttpStatus()),
+                    businessEx.getCode(),
+                    businessEx.getMessage());
+        }
+
         if (ex instanceof ConstraintViolationException validationEx) {
             log.warn("Validation error: {}", ex.getMessage());
             return toListErrors(validationEx.getConstraintViolations())
-                    .flatMap(errors -> writeResponse(response, HttpStatus.BAD_REQUEST,
-                            "Validation Error", errors));
+                    .flatMap(errors -> writeResponse(response,
+                            HttpStatus.BAD_REQUEST,
+                            "B400-001",
+                            String.join(", ", errors)));
         }
 
         log.error("An error has occurred: {}", ex.getMessage(), ex);
-        return writeResponse(response, HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal Server Error", List.of(ex.getMessage()));
+        return writeResponse(response,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "E500-001",
+                "Internal Server Error");
     }
 
     private Mono<Void> writeResponse(org.springframework.http.server.reactive.ServerHttpResponse response,
-                                     HttpStatus status, String error, List<String> details) {
+                                     HttpStatus status, String code, String message) {
         Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("code", code);
         errorResponse.put("status", status.value());
-        errorResponse.put("error", error);
-        errorResponse.put("details", details);
+        errorResponse.put("message", message);
 
         return Mono.fromCallable(() -> objectMapper.writeValueAsBytes(errorResponse))
                 .map(response.bufferFactory()::wrap)

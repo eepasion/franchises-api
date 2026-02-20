@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateFranchiseResponse {
+public class BranchResponse {
     private Long id;
     private String name;
+    private Long franchiseId;
 }

@@ -1,5 +1,6 @@
-package co.com.bancolombia.api.dto.response;
+package co.com.bancolombia.api.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateFranchiseResponse {
-    private Long id;
+public class AddBranchRequest {
+    @NotBlank(message = "The name is a required field.")
     private String name;
 }

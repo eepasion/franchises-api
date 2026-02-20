@@ -34,7 +34,7 @@ class CreateFranchiseUseCaseTest {
                 .build();
 
         Franchise savedFranchise = franchise.toBuilder()
-                .id("generated-id")
+                .id(1L)
                 .build();
 
         when(repository.save(any(Franchise.class))).thenReturn(Mono.just(savedFranchise));
