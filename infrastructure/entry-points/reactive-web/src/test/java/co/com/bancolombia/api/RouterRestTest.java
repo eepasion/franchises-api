@@ -3,6 +3,9 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.dto.request.AddBranchRequest;
 import co.com.bancolombia.api.dto.request.AddProductRequest;
 import co.com.bancolombia.api.dto.request.CreateFranchiseRequest;
+import co.com.bancolombia.api.dto.request.UpdateBranchNameRequest;
+import co.com.bancolombia.api.dto.request.UpdateFranchiseNameRequest;
+import co.com.bancolombia.api.dto.request.UpdateProductNameRequest;
 import co.com.bancolombia.api.dto.request.UpdateProductStockRequest;
 import co.com.bancolombia.api.dto.response.BranchResponse;
 import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
@@ -21,6 +24,9 @@ import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
 import co.com.bancolombia.usecase.gettopstockproductsbyfranchise.GetTopStockProductsByFranchiseUseCase;
+import co.com.bancolombia.usecase.updatebranchname.UpdateBranchNameUseCase;
+import co.com.bancolombia.usecase.updatefranchisename.UpdateFranchiseNameUseCase;
+import co.com.bancolombia.usecase.updateproductname.UpdateProductNameUseCase;
 import co.com.bancolombia.usecase.updateproductstock.UpdateProductStockUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -64,6 +70,15 @@ class RouterRestTest {
 
     @MockitoBean
     private GetTopStockProductsByFranchiseUseCase getTopStockProductsByFranchiseUseCase;
+
+    @MockitoBean
+    private UpdateFranchiseNameUseCase updateFranchiseNameUseCase;
+
+    @MockitoBean
+    private UpdateProductNameUseCase updateProductNameUseCase;
+
+    @MockitoBean
+    private UpdateBranchNameUseCase updateBranchNameUseCase;
 
     @TestConfiguration
     static class Config {
@@ -407,6 +422,195 @@ class RouterRestTest {
 
         webTestClient.get()
                 .uri("/api/franchises/999/top-products")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void testUpdateFranchiseName() {
+        Franchise updatedFranchise = Franchise.builder()
+                .id(1L)
+                .name("Updated Franchise Name")
+                .build();
+
+        when(updateFranchiseNameUseCase.updateName(1L, "Updated Franchise Name"))
+                .thenReturn(Mono.just(updatedFranchise));
+
+        UpdateFranchiseNameRequest request = UpdateFranchiseNameRequest.builder()
+                .name("Updated Franchise Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/franchises/1/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(CreateFranchiseResponse.class)
+                .value(response -> {
+                    assertThat(response).isNotNull()
+                            .extracting(
+                                    CreateFranchiseResponse::getId,
+                                    CreateFranchiseResponse::getName
+                            ).containsExactly(1L, "Updated Franchise Name");
+                });
+    }
+
+    @Test
+    void testUpdateFranchiseNameWithInvalidId() {
+        UpdateFranchiseNameRequest request = UpdateFranchiseNameRequest.builder()
+                .name("Updated Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/franchises/invalid/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testUpdateFranchiseNameNotFound() {
+        when(updateFranchiseNameUseCase.updateName(999L, "Updated Name"))
+                .thenReturn(Mono.error(new BusinessException(ErrorCode.B404001)));
+
+        UpdateFranchiseNameRequest request = UpdateFranchiseNameRequest.builder()
+                .name("Updated Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/franchises/999/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void testUpdateBranchName() {
+        Branch updatedBranch = Branch.builder()
+                .id(1L)
+                .name("Updated Branch Name")
+                .franchiseId(1L)
+                .build();
+
+        when(updateBranchNameUseCase.updateName(1L, "Updated Branch Name"))
+                .thenReturn(Mono.just(updatedBranch));
+
+        UpdateBranchNameRequest request = UpdateBranchNameRequest.builder()
+                .name("Updated Branch Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/branches/1/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(BranchResponse.class)
+                .value(response -> {
+                    assertThat(response).isNotNull()
+                            .extracting(
+                                    BranchResponse::getId,
+                                    BranchResponse::getName,
+                                    BranchResponse::getFranchiseId
+                            ).containsExactly(1L, "Updated Branch Name", 1L);
+                });
+    }
+
+    @Test
+    void testUpdateBranchNameWithInvalidId() {
+        UpdateBranchNameRequest request = UpdateBranchNameRequest.builder()
+                .name("Updated Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/branches/invalid/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testUpdateBranchNameNotFound() {
+        when(updateBranchNameUseCase.updateName(999L, "Updated Name"))
+                .thenReturn(Mono.error(new BusinessException(ErrorCode.B404002)));
+
+        UpdateBranchNameRequest request = UpdateBranchNameRequest.builder()
+                .name("Updated Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/branches/999/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void testUpdateProductName() {
+        Product updatedProduct = Product.builder()
+                .id(1L)
+                .name("Updated Product Name")
+                .stock(10)
+                .branchId(1L)
+                .build();
+
+        when(updateProductNameUseCase.updateName(1L, "Updated Product Name"))
+                .thenReturn(Mono.just(updatedProduct));
+
+        UpdateProductNameRequest request = UpdateProductNameRequest.builder()
+                .name("Updated Product Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/products/1/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProductResponse.class)
+                .value(response -> {
+                    assertThat(response).isNotNull()
+                            .extracting(
+                                    ProductResponse::getId,
+                                    ProductResponse::getName,
+                                    ProductResponse::getStock,
+                                    ProductResponse::getBranchId
+                            ).containsExactly(1L, "Updated Product Name", 10, 1L);
+                });
+    }
+
+    @Test
+    void testUpdateProductNameWithInvalidId() {
+        UpdateProductNameRequest request = UpdateProductNameRequest.builder()
+                .name("Updated Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/products/invalid/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testUpdateProductNameNotFound() {
+        when(updateProductNameUseCase.updateName(999L, "Updated Name"))
+                .thenReturn(Mono.error(new BusinessException(ErrorCode.B404003)));
+
+        UpdateProductNameRequest request = UpdateProductNameRequest.builder()
+                .name("Updated Name")
+                .build();
+
+        webTestClient.patch()
+                .uri("/api/products/999/name")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
                 .exchange()
                 .expectStatus().isNotFound();
     }
