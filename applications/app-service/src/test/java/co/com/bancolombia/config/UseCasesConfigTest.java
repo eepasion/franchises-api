@@ -40,6 +40,11 @@ class UseCasesConfigTest {
                 public Mono<Franchise> save(Franchise franchise) {
                     return Mono.empty();
                 }
+
+                @Override
+                public Mono<Franchise> findById(String id) {
+                    return Mono.empty();
+                }
             };
         }
     }
