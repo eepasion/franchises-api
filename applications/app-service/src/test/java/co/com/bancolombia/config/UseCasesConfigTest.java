@@ -42,7 +42,7 @@ class UseCasesConfigTest {
                 }
 
                 @Override
-                public Mono<Franchise> findById(String id) {
+                public Mono<Franchise> findById(Long id) {
                     return Mono.empty();
                 }
             };

@@ -1,7 +1,9 @@
 package co.com.bancolombia.r2dbc;
 
 import co.com.bancolombia.model.franchise.Franchise;
+import co.com.bancolombia.r2dbc.adapter.FranchiseRepositoryAdapter;
 import co.com.bancolombia.r2dbc.entity.FranchiseEntity;
+import co.com.bancolombia.r2dbc.repository.FranchiseReactiveRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,12 +36,12 @@ class FranchiseRepositoryAdapterTest {
     @Test
     void shouldSaveFranchise() {
         Franchise franchise = Franchise.builder()
-                .id("1")
+                .id(1L)
                 .name("Test Franchise")
                 .build();
 
         FranchiseEntity entity = FranchiseEntity.builder()
-                .id("1")
+                .id(1L)
                 .name("Test Franchise")
                 .build();
 
@@ -50,7 +52,7 @@ class FranchiseRepositoryAdapterTest {
 
         StepVerifier.create(adapter.save(franchise))
                 .assertNext(result -> {
-                    assertEquals("1", result.getId());
+                    assertEquals(1L, result.getId());
                     assertEquals("Test Franchise", result.getName());
                 })
                 .verifyComplete();

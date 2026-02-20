@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Branch {
-    private String id;
+    private Long id;
     private String name;
-    private String franchiseId;
+    private Long franchiseId;
 }

@@ -10,7 +10,6 @@ public class CreateFranchiseUseCase {
     private final FranchiseRepository gateway;
 
     public Mono<Franchise> save(Franchise franchise){
-        franchise.setId(java.util.UUID.randomUUID().toString());
         return gateway.save(franchise);
     }
 }

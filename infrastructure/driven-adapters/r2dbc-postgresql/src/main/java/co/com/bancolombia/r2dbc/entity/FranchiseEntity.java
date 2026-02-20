@@ -14,6 +14,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class FranchiseEntity {
     @Id
-    private String id;
+    private Long id;
     private String name;
 }
