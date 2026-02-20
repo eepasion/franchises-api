@@ -11,6 +11,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -83,7 +84,10 @@ class UseCasesConfigTest {
                 public Mono<Void> deleteById(Long id){
                     return Mono.empty();
                 }
-
+                @Override
+                public Flux<Product> findTopStockByBranchesInFranchise(Long franchiseId){
+                    return Flux.empty();
+                }
             };
         }
     }

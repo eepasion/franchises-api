@@ -14,6 +14,7 @@ import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCa
 import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
+import co.com.bancolombia.usecase.gettopstockproductsbyfranchise.GetTopStockProductsByFranchiseUseCase;
 import co.com.bancolombia.usecase.updateproductstock.UpdateProductStockUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,7 @@ public class Handler {
     private final AddProductToBranchUseCase addProductToBranchUseCase;
     private final DeleteProductUseCase deleteProductUseCase;
     private final UpdateProductStockUseCase updateProductStockUseCase;
+    private final GetTopStockProductsByFranchiseUseCase topStockProductsByFranchiseUseCase;
 
 
     public Mono<ServerResponse> createFranchise(ServerRequest serverRequest) {
@@ -98,5 +100,17 @@ public class Handler {
                                 .flatMap(product ->
                                         ServerResponse.ok().bodyValue(product))
                 );
+    }
+
+    public Mono<ServerResponse> getTopStockProductsByFranchise(ServerRequest serverRequest) {
+        String franchiseIdStr = serverRequest.pathVariable("franchiseId");
+        return Mono.fromCallable(() -> Long.parseLong(franchiseIdStr))
+                .onErrorMap(NumberFormatException.class,
+                        e -> new BusinessException(ErrorCode.B400001, "Invalid franchise ID"))
+                .flatMapMany(topStockProductsByFranchiseUseCase::getTopStockProductsByFranchise)
+                .map(ProductMapper::toDtoWithBranch)
+                .collectList()
+                .flatMap(products ->
+                        ServerResponse.ok().bodyValue(products));
     }
 }

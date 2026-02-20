@@ -7,6 +7,7 @@ import co.com.bancolombia.api.dto.request.UpdateProductStockRequest;
 import co.com.bancolombia.api.dto.response.BranchResponse;
 import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
 import co.com.bancolombia.api.dto.response.ProductResponse;
+import co.com.bancolombia.api.dto.response.ProductWithBranchResponse;
 import co.com.bancolombia.api.helper.GlobalErrorHandler;
 import co.com.bancolombia.api.helper.ValidationUtil;
 import co.com.bancolombia.model.branch.Branch;
@@ -14,10 +15,12 @@ import co.com.bancolombia.model.exception.BusinessException;
 import co.com.bancolombia.model.exception.ErrorCode;
 import co.com.bancolombia.model.franchise.Franchise;
 import co.com.bancolombia.model.product.Product;
+import co.com.bancolombia.model.product.ProductWithBranch;
 import co.com.bancolombia.usecase.addbranchtofranchise.AddBranchToFranchiseUseCase;
 import co.com.bancolombia.usecase.addproducttobranch.AddProductToBranchUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import co.com.bancolombia.usecase.deleteproduct.DeleteProductUseCase;
+import co.com.bancolombia.usecase.gettopstockproductsbyfranchise.GetTopStockProductsByFranchiseUseCase;
 import co.com.bancolombia.usecase.updateproductstock.UpdateProductStockUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -57,6 +61,9 @@ class RouterRestTest {
 
     @MockitoBean
     private UpdateProductStockUseCase updateProductStockUseCase;
+
+    @MockitoBean
+    private GetTopStockProductsByFranchiseUseCase getTopStockProductsByFranchiseUseCase;
 
     @TestConfiguration
     static class Config {
@@ -346,4 +353,61 @@ class RouterRestTest {
                 .expectStatus().isNotFound();
     }
 
+    @Test
+    void testGetTopStockProductsByFranchise() {
+        Branch branch = Branch.builder()
+                .id(1L)
+                .name("Test Branch")
+                .franchiseId(1L)
+                .build();
+
+        Product product = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .stock(50)
+                .branchId(1L)
+                .build();
+
+        ProductWithBranch productWithBranch = ProductWithBranch.builder()
+                .product(product)
+                .branch(branch)
+                .build();
+
+        when(getTopStockProductsByFranchiseUseCase.getTopStockProductsByFranchise(1L))
+                .thenReturn(Flux.just(productWithBranch));
+
+        webTestClient.get()
+                .uri("/api/franchises/1/top-products")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(ProductWithBranchResponse.class)
+                .value(responses -> {
+                    assertThat(responses).isNotNull();
+                    ProductWithBranchResponse response = responses.getFirst();
+                    assertThat(response.getProductId()).isEqualTo(1L);
+                    assertThat(response.getProductName()).isEqualTo("Test Product");
+                    assertThat(response.getStock()).isEqualTo(50);
+                    assertThat(response.getBranchId()).isEqualTo(1L);
+                    assertThat(response.getBranchName()).isEqualTo("Test Branch");
+                });
+    }
+
+    @Test
+    void testGetTopStockProductsByFranchiseWithInvalidId() {
+        webTestClient.get()
+                .uri("/api/franchises/invalid/top-products")
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void testGetTopStockProductsByFranchiseNotFound() {
+        when(getTopStockProductsByFranchiseUseCase.getTopStockProductsByFranchise(999L))
+                .thenReturn(Flux.error(new BusinessException(ErrorCode.B404001)));
+
+        webTestClient.get()
+                .uri("/api/franchises/999/top-products")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
 }
