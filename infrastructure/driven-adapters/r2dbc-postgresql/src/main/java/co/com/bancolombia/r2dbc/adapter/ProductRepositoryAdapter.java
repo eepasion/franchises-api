@@ -7,6 +7,7 @@ import co.com.bancolombia.r2dbc.helper.ReactiveAdapterOperations;
 import co.com.bancolombia.r2dbc.repository.ProductReactiveRepository;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
 @Repository
 public class ProductRepositoryAdapter extends ReactiveAdapterOperations<
@@ -19,4 +20,8 @@ public class ProductRepositoryAdapter extends ReactiveAdapterOperations<
         super(repository, mapper, d -> mapper.mapBuilder(d, Product.ProductBuilder.class).build());
     }
 
+    @Override
+    public Mono<Void> deleteById(Long id) {
+        return repository.deleteById(id);
+    }
 }
