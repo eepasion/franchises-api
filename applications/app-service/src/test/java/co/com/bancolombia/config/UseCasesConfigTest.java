@@ -1,5 +1,7 @@
 package co.com.bancolombia.config;
 
+import co.com.bancolombia.model.branch.Branch;
+import co.com.bancolombia.model.branch.gateways.BranchRepository;
 import co.com.bancolombia.model.franchise.Franchise;
 import co.com.bancolombia.model.franchise.gateways.FranchiseRepository;
 import org.junit.jupiter.api.Test;
@@ -45,6 +47,17 @@ class UseCasesConfigTest {
                 public Mono<Franchise> findById(Long id) {
                     return Mono.empty();
                 }
+            };
+        }
+
+        @Bean
+        public BranchRepository branchRepository() {
+            return new BranchRepository() {
+                @Override
+                public Mono<Branch> save(Branch branch) {
+                    return Mono.empty();
+                }
+
             };
         }
     }

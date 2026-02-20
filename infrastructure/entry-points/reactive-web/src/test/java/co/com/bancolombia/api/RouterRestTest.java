@@ -5,6 +5,7 @@ import co.com.bancolombia.api.dto.response.CreateFranchiseResponse;
 import co.com.bancolombia.api.helper.GlobalErrorHandler;
 import co.com.bancolombia.api.helper.ValidationUtil;
 import co.com.bancolombia.model.franchise.Franchise;
+import co.com.bancolombia.usecase.createfranchise.AddBranchToFranchiseUseCase;
 import co.com.bancolombia.usecase.createfranchise.CreateFranchiseUseCase;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ class RouterRestTest {
 
     @MockitoBean
     private CreateFranchiseUseCase createFranchiseUseCase;
+
+    @MockitoBean
+    private AddBranchToFranchiseUseCase addBranchToFranchiseUseCase;
 
     @TestConfiguration
     static class Config {
@@ -66,7 +70,7 @@ class RouterRestTest {
                             .extracting(
                                     CreateFranchiseResponse::getId,
                                     CreateFranchiseResponse::getName
-                            ).containsExactly("123", "Test Franchise");
+                            ).containsExactly(1L, "Test Franchise");
                 });
     }
 
